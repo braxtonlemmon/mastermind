@@ -1,0 +1,1 @@
+Command line Mastermind game project based on the object-oriented programming curriculum from The Odin Project (https://www.theodinproject.com/lessons/oop).
