@@ -8,17 +8,18 @@ require_relative 'rules'
 class Game
 	include Rules 
 
-	attr_accessor :gameboard, :human, :computer, :answer, :guess
+	attr_accessor :gameboard, :human, :computer, :answer, :guess, :history
 	
 	def initialize(gameboard = Board.new)
 		@gameboard = gameboard
 		@computer = Computer.new
 		@answer = computer.generate_pattern
+		@history = []
 		setup_game { show_rules }
 	end
 
 	def setup_game
-		puts "Welcome to Mastermind!\n\n"
+		puts "Welcome to Mastermind!\n\n"	
 		puts "Would you like to see the rules? (y/n)"
 		yield if gets.chomp.downcase[0] == 'y'
 		puts "Ok. Please enter your name:"
@@ -30,6 +31,7 @@ class Game
 	def play
 		(1..12).each do |attempt_number|
 			puts "\n\nThis is attempt ##{attempt_number}..."
+			show_history if attempt_number > 1
 			make_guess
 			check_guess
 			game_over if win?
@@ -51,6 +53,7 @@ class Game
 	def check_guess
 			pegs = compare_guess_to_pattern
 			puts "Black pegs: #{pegs[0]}\nWhite pegs: #{pegs[1]}. \nTry again"
+			@history << [guess, pegs]
 	end
 
 	def compare_guess_to_pattern
@@ -75,6 +78,13 @@ class Game
 		[b_pegs, w_pegs]
 	end
 
+	def show_history
+		puts "******************************************************************"
+		history.each_with_index do |try, i|
+			puts "Guess #{i+1}: [#{try[0].join(' | ')}].................White pegs: #{try[1][0]} | Black pegs: #{try[1][1]}"
+		end
+		puts "******************************************************************"
+	end
 
 	def win?
 		guess == answer
