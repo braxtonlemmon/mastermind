@@ -18,6 +18,14 @@ class Game
 		setup_game { show_rules }
 	end
 
+	def choose_role
+		until choice.between?(1..2)
+			choice = 0
+			puts "Which role do you want?\nPress (1) to be CODEMAKER or press (2) to be CODEBREAKER"
+			choice = gets.chomp.to_i
+		end
+	end
+
 	def setup_game
 		puts "Welcome to Mastermind!\n\n"	
 		puts "Would you like to see the rules? (y/n)"
@@ -34,9 +42,9 @@ class Game
 			show_history if attempt_number > 1
 			make_guess
 			check_guess
-			game_over if win?
+			break if win?
 		end
-		game_over
+		play_again? ? (game = Game.new) : return
 	end
 
 	def make_guess
@@ -46,13 +54,12 @@ class Game
 			puts "Please enter four letters to make a guess (A-F): "
 			try = gets.chomp.upcase.split('')
 		end
-		puts "\nYou guessed [#{try.join(' ')}]."
+		puts "\nYou guessed:    [#{try.join(' | ')}]"
 		@guess = try
 	end
 
 	def check_guess
 			pegs = compare_guess_to_pattern
-			puts "Black pegs: #{pegs[0]}\nWhite pegs: #{pegs[1]}. \nTry again"
 			@history << [guess, pegs]
 	end
 
@@ -81,7 +88,7 @@ class Game
 	def show_history
 		puts "******************************************************************"
 		history.each_with_index do |try, i|
-			puts "Guess #{i+1}: [#{try[0].join(' | ')}].................White pegs: #{try[1][0]} | Black pegs: #{try[1][1]}"
+			puts "Guess #{i+1}: [#{try[0].join(' | ')}].................Black pegs: #{try[1][0]} | White pegs: #{try[1][1]}"
 		end
 		puts "******************************************************************"
 	end
@@ -90,11 +97,11 @@ class Game
 		guess == answer
 	end
 
-	def game_over
+	def play_again?
+		puts "Correct answer: [#{answer.join(' | ')}]"
 		puts win? ? "You win!" : "You lose, sorry."
-		# puts "\n\nYou did not guess the correct combination."
 		puts "Would you like to play again?"
-		gets.chomp.downcase[0] == 'y' ? (game = Game.new) : return
+		gets.chomp.downcase[0] == 'y' ? true : false
 	end		
 end
 
