@@ -13,16 +13,18 @@ class Game
 	def initialize(gameboard = Board.new)
 		@gameboard = gameboard
 		@computer = Computer.new
-		@answer = computer.generate_pattern
-		@history = []
+		@answer = Array.new
+		@human = false
+		@history = Array.new
+		@guess = Array.new(4)
 		setup_game { show_rules }
 	end
 
 	def choose_role
-		until choice.between?(1..2)
-			choice = 0
+		choice = 0
+		until choice.between?(1,2)
 			puts "Which role do you want?\nPress (1) to be CODEMAKER or press (2) to be CODEBREAKER"
-			choice = gets.chomp.to_i
+			return choice = gets.chomp.to_i
 		end
 	end
 
@@ -32,19 +34,36 @@ class Game
 		yield if gets.chomp.downcase[0] == 'y'
 		puts "Ok. Please enter your name:"
 		@human = Player.new(gets.chomp)
-		puts "\nIt's #{human.name} versus the computer. Let's play!"
-		play
+		puts "\nIt's #{human.name} versus the computer. Let's play!\n\n"
+		choose_role == 1 ? play_as_codemaker : play_as_codebreaker
 	end
 
-	def play
+	def play_as_codebreaker
+		@human = true
+		@answer = Array.new(4) { computer.random_peg }
+		puts "\nYou are the codebreaker. Break the code!"
+		loop_turns
+		play_again? ? (game = Game.new) : return
+	end
+
+	def play_as_codemaker
+		until answer.size == 4 && answer.all? { |x| x.match(/[A-F]/) }
+			puts "\nYou are the codemaker. Enter any four-letter combination of the letters [ A | B | C | D | E | F ]: "
+			@answer = gets.chomp.upcase.split('')
+		end
+		puts "This is the secret code: [#{answer.join(" | ")}]\nThe computer will now attempt to guess your code..."
+		loop_turns
+		play_again? ? (game = Game.new) : return
+	end
+
+	def loop_turns
 		(1..12).each do |attempt_number|
-			puts "\n\nThis is attempt ##{attempt_number}..."
-			show_history if attempt_number > 1
-			make_guess
+			puts "This is attempt #{attempt_number}..."
+			@human == true ? make_guess : (@guess = computer.generate_guess(@answer)) 
 			check_guess
+			show_history
 			break if win?
 		end
-		play_again? ? (game = Game.new) : return
 	end
 
 	def make_guess
@@ -54,7 +73,7 @@ class Game
 			puts "Please enter four letters to make a guess (A-F): "
 			try = gets.chomp.upcase.split('')
 		end
-		puts "\nYou guessed:    [#{try.join(' | ')}]"
+		puts "\nYou guessed:    [#{try.join(' | ')}]\n\n"
 		@guess = try
 	end
 
@@ -99,7 +118,11 @@ class Game
 
 	def play_again?
 		puts "Correct answer: [#{answer.join(' | ')}]"
-		puts win? ? "You win!" : "You lose, sorry."
+		if @human == true
+			puts win? ? "You win!" : "You lose."
+		else
+			puts win? ? "Computer wins." : "You win! Computer loses."
+		end
 		puts "Would you like to play again?"
 		gets.chomp.downcase[0] == 'y' ? true : false
 	end		
